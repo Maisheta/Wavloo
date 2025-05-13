@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "350593763947",
+    "project_id": "wavlo-9dac8",
+    "storage_bucket": "wavlo-9dac8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350593763947:android:09b5aa40fee9d29816ff2e",
+        "android_client_info": {
+          "package_name": "com.example.chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_T2Jav0QIA8mKBvauPYBSk1hKtTdn9UI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
