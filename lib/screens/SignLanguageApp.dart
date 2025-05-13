@@ -47,13 +47,9 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
   double _fps = 0.0;
   bool _isStable = false;
   String? _errorMessage;
-  bool _isSending = false;
   Timer? _timer;
-  final String _apiUrl = 'https://3717-45-244-172-52.ngrok-free.app/ws';
-  final String _resetUrl = 'https://3717-45-244-172-52.ngrok-free.app/reset';
-  final String _chatApiUrl = 'https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message';
-  // ضيفي الـ token هنا لو عندك، أو اتركيه فاضي لو ماعندكيش
-  final String _authToken = ''; // استبدليه بالـ token بتاعك، مثلاً: 'abc123'
+  final String _apiUrl = 'http://20.121.41.74:5000/ws';
+  final String _resetUrl = 'http://20.121.41.74:5000/reset';
 
   @override
   void initState() {
@@ -64,7 +60,7 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
   Future<void> _initializeCamera() async {
     try {
       final frontCamera = widget.cameras.firstWhere(
-            (camera) => camera.lensDirection == CameraLensDirection.front,
+        (camera) => camera.lensDirection == CameraLensDirection.front,
         orElse: () => widget.cameras.first,
       );
 
@@ -90,23 +86,32 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
       setState(() {});
       _startImageStream();
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error initializing camera: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error initializing camera: $e';
+        });
+      }
     }
   }
 
   void _startImageStream() {
     _timer = Timer.periodic(const Duration(milliseconds: 200), (timer) async {
-      if (!_isProcessing &&
-          _controller != null &&
-          _controller!.value.isInitialized) {
+      if (!mounted ||
+          _controller == null ||
+          !_controller!.value.isInitialized) {
+        return;
+      }
+      if (!_isProcessing) {
         await _processFrame();
       }
     });
   }
 
   Future<void> _processFrame() async {
+    if (!mounted || _controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _errorMessage = null;
@@ -123,6 +128,8 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
         body: jsonEncode({'image': base64Image}),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -133,17 +140,21 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = 'API Error: ${response.statusCode}';
+          _errorMessage =
+              'API Error: ${response.statusCode} - ${response.body}';
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error processing frame: $e';
       });
     } finally {
-      setState(() {
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -153,6 +164,7 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
         Uri.parse(_resetUrl),
         headers: {'Content-Type': 'application/json'},
       );
+      if (!mounted) return;
       if (response.statusCode == 200) {
         setState(() {
           _currentText = '';
@@ -161,10 +173,12 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = 'Reset error: ${response.statusCode}';
+          _errorMessage =
+              'Reset error: ${response.statusCode} - ${response.body}';
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error resetting processor: $e';
       });
@@ -173,85 +187,44 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
 
   Future<void> _sendToChat() async {
     if (_currentText.isEmpty) {
-      setState(() {
-        _errorMessage = 'No text to send!';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'No text to send!';
+        });
+      }
       return;
     }
 
-    setState(() {
-      _isSending = true;
-      _errorMessage = null;
-    });
+    // إرجاع النص للـ ChatScreen بدل إرساله مباشرة للـ API
+    Navigator.pop(context, _currentText);
 
-    try {
-      print('Attempting to send to chat: $_currentText');
-      print('Chat API URL: $_chatApiUrl');
-      print('Using token: ${_authToken.isEmpty ? 'No token provided' : _authToken}');
-
-      // إعداد الـ headers
-      final headers = {
-        'Content-Type': 'application/json',
-      };
-      if (_authToken.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $_authToken';
-      } else {
-        print('Warning: No auth token provided. The API might require one.');
-      }
-
-      final response = await http.post(
-        Uri.parse(_chatApiUrl),
-        headers: headers,
-        body: jsonEncode({
-          'roomId': 1, // تأكدي إن الـ roomId صح
-          'message': _currentText,
-          'attachmentUrl': null,
-          'isPrivate': true,
-          'targetUserId': null,
-          // لو الـ API بيطلب حقل إضافي زي userId، ضيفيه هنا
-          // 'userId': 'YOUR_USER_ID',
-        }),
-      ).timeout(const Duration(seconds: 10));
-
-      print('Chat API Response: ${response.statusCode} - ${response.body}');
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _errorMessage = 'Message sent to chat successfully ✅';
-          _currentText = '';
-        });
-      } else if (response.statusCode == 401) {
-        setState(() {
-          _errorMessage =
-          'Unauthorized (401). Please provide a valid token or check credentials. Response: ${response.body}';
-        });
-      } else if (response.statusCode == 404) {
-        setState(() {
-          _errorMessage =
-          'API endpoint not found (404). Check the URL: $_chatApiUrl';
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to send: ${response.statusCode} - ${response.body}';
-        });
-      }
-    } catch (e) {
-      print('Error sending to chat: $e');
+    if (mounted) {
       setState(() {
-        _errorMessage = 'Error sending message: $e';
+        _errorMessage = 'Message prepared for chat! ✅';
+        _currentText = '';
+        _actionFeedback = null;
       });
-    } finally {
-      setState(() {
-        _isSending = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Text sent to chat!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _controller?.setFlashMode(FlashMode.off);
-    _controller?.dispose();
+    _timer = null;
+    if (_controller != null) {
+      _controller!.setFlashMode(FlashMode.off).catchError((e) {
+        print('Error turning off flash: $e');
+      });
+      _controller!.dispose();
+      _controller = null;
+    }
     super.dispose();
   }
 
@@ -321,9 +294,10 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _isStable
-                          ? Colors.green.withOpacity(0.8)
-                          : Colors.red.withOpacity(0.8),
+                      color:
+                          _isStable
+                              ? Colors.green.withOpacity(0.8)
+                              : Colors.red.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -408,6 +382,26 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
                         ),
                       ),
                     ),
+                  if (_actionFeedback != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _actionFeedback!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -423,9 +417,10 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
                           ? 'Waiting for sign...'
                           : _currentText,
                       style: TextStyle(
-                        color: _currentText.isEmpty
-                            ? Colors.white.withOpacity(0.5)
-                            : Colors.white,
+                        color:
+                            _currentText.isEmpty
+                                ? Colors.white.withOpacity(0.5)
+                                : Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -449,45 +444,15 @@ class _SignLanguageScreenState extends State<SignLanguageScreen> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentText = '';
-                            _errorMessage = null;
-                          });
-                        },
+                        onPressed: _currentText.isEmpty ? null : _sendToChat,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                          backgroundColor:
+                              _currentText.isEmpty ? Colors.grey : Colors.green,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         child: const Text(
-                          'Clear Text',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _currentText.isEmpty || _isSending
-                            ? null
-                            : _sendToChat,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _currentText.isEmpty
-                              ? Colors.grey
-                              : Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: _isSending
-                            ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Text(
                           'Send to Chat',
                           style: TextStyle(color: Colors.white),
                         ),
