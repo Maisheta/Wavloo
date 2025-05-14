@@ -25,7 +25,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   String? token;
   String? userId;
 
-  final String baseUrl = "https://6589-45-244-213-140.ngrok-free.app";
+  final String baseUrl = "https://45ff-45-244-177-153.ngrok-free.app";
 
   @override
   void initState() {
