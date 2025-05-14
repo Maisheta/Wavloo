@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:chat/screens/Home_screen.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:http/http.dart' as http;
+import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../components/Orange_Circle.dart';
+import 'ChatsListScreen.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String email;
@@ -34,32 +35,56 @@ class VerifyScreenState extends State<VerifyScreen> {
     }
 
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/Auth/validate-otp",
+      "https://45ff-45-244-177-153.ngrok-free.app/api/Auth/validate-otp",
     );
+
+    // Retrieve token from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    print("🔍 Verify Token: $token");
+
+    if (token.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No token found. Please register again.")),
+      );
+      return;
+    }
 
     final client = widget.client ?? http.Client();
     try {
       final response = await client.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: '{"email": "${widget.email}", "otp": "$otp"}',
       );
 
+      print("📡 Verify Response Code: ${response.statusCode}");
+      print("📨 Verify Response Body: ${response.body}");
+
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+      if (response.statusCode == 200 &&
+          response.body.contains("OTP Verified Successfully")) {
+        // Navigate to ChatsListScreen
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatsListScreen()),
+            (route) => false,
+          );
+        }
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("❌ Invalid OTP")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Invalid OTP: ${response.body}")),
+        );
       }
     } catch (e) {
-      print("OTP verification error: $e");
+      print("❌ OTP verification error: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -69,15 +94,25 @@ class VerifyScreenState extends State<VerifyScreen> {
 
   Future<void> resendOtp() async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/Auth/resend-otp",
+      "https://45ff-45-244-177-153.ngrok-free.app/api/Auth/resend-otp",
     );
+
+    // Retrieve token for resend if required
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
 
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          if (token.isNotEmpty) "Authorization": "Bearer $token",
+        },
         body: '{"email": "${widget.email}"}',
       );
+
+      print("📡 Resend OTP Response Code: ${response.statusCode}");
+      print("📨 Resend OTP Response Body: ${response.body}");
 
       if (!mounted) return;
 
@@ -86,12 +121,12 @@ class VerifyScreenState extends State<VerifyScreen> {
           const SnackBar(content: Text("✅ OTP re-sent successfully")),
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("❌ Failed to resend OTP")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Failed to resend OTP: ${response.body}")),
+        );
       }
     } catch (e) {
-      print("Resend error: $e");
+      print("❌ Resend OTP error: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -102,7 +137,6 @@ class VerifyScreenState extends State<VerifyScreen> {
   @override
   void dispose() {
     otpController?.dispose();
-    otpController = null;
     super.dispose();
   }
 
