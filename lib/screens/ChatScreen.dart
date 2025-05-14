@@ -19,7 +19,7 @@ class ChatScreen extends StatefulWidget {
   final String lastName;
   final String userImage;
   final String targetUserId;
-  final VoidCallback? onMessageSent; // Callback لتحديث الشاتات
+  final VoidCallback? onMessageSent;
 
   const ChatScreen({
     super.key,
@@ -238,7 +238,7 @@ class _ChatScreenState extends State<ChatScreen> {
               'fileUrl': fileUrl,
               'attachmentUrl': fileUrl,
               'fileType': fileType,
-              'fileName': fileName,
+              ' fileName': fileName,
             }),
           );
 
@@ -261,7 +261,6 @@ class _ChatScreenState extends State<ChatScreen> {
               _messageController.clear();
               _isWriting = false;
             });
-            // استدعاء الـ callback لتحديث قايمة الشاتات
             widget.onMessageSent?.call();
           } else {
             throw Exception(
@@ -285,7 +284,6 @@ class _ChatScreenState extends State<ChatScreen> {
             _messageController.clear();
             _isWriting = false;
           });
-          // استدعاء الـ callback حتى لو فشل رفع الملف، لكن الرسالة موجودة محليًا
           widget.onMessageSent?.call();
         }
       } else {
@@ -303,11 +301,15 @@ class _ChatScreenState extends State<ChatScreen> {
           }),
         );
 
+        print(
+          "استجابة إرسال الرسالة: ${response.statusCode} - ${response.body}",
+        );
+
         if (response.statusCode == 200) {
           setState(() {
             messages.add({
               'text': text,
-              'isMe': widget.targetUserId != currentUserId,
+              'isMe': true, // تم تعديله ليكون دايمًا true للرسايل المبعتة
               'filePath': null,
               'fileType': null,
               'fileName': null,
@@ -317,11 +319,17 @@ class _ChatScreenState extends State<ChatScreen> {
             _messageController.clear();
             _isWriting = false;
           });
-          // استدعاء الـ callback لتحديث قايمة الشاتات
           widget.onMessageSent?.call();
         } else {
           print("❌ فشل في إرسال الرسالة: ${response.statusCode}");
           print("Body: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "❗ فشل في إرسال الرسالة: ${response.statusCode} - ${response.body}",
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
@@ -492,7 +500,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? newChatId = await _selectChatToForward();
     if (newChatId != null) {
       final url = Uri.parse(
-        "https://45ff-45-244-177-153.ngrok-free.app/api/Chat/send-message",
+        "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
       );
 
       try {
@@ -577,7 +585,7 @@ class _ChatScreenState extends State<ChatScreen> {
             "${dir.path}/temp_audio_${DateTime.now().millisecondsSinceEpoch}.aac";
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
-        print("تم تحميل الملف الصوتي: $filePath");
+        print("تم  file: $filePath");
         return file;
       } else {
         throw Exception('فشل في تحميل الملف الصوتي: ${response.statusCode}');
@@ -1004,7 +1012,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     } else {
                       try {
                         final cameras = await availableCameras();
-                        Navigator.push(
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
@@ -1012,6 +1020,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                     SignLanguageScreen(cameras: cameras),
                           ),
                         );
+                        if (result != null &&
+                            result is String &&
+                            result.isNotEmpty) {
+                          setState(() {
+                            _messageController.text = result;
+                            _isWriting = true;
+                          });
+                          await sendMessage();
+                        }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -1044,6 +1061,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _recorder?.closeRecorder();
     audioPlayer.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 }
