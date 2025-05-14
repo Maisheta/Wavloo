@@ -17,7 +17,7 @@ class _StatusScreenState extends State<StatusScreen> {
   List<Map<String, dynamic>> statuses = [];
   bool isLoading = false;
   String? errorMessage;
-  final String baseUrl = 'https://332c-45-244-203-66.ngrok-free.app';
+  final String baseUrl = 'https://45ff-45-244-177-153.ngrok-free.app';
 
   @override
   void initState() {
@@ -336,7 +336,7 @@ class _StoryViewScreenState extends State<StoryViewScreen> {
   bool isLoading = true;
   String? errorMessage;
   VideoPlayerController? _videoController;
-  final String baseUrl = 'https://332c-45-244-203-66.ngrok-free.app';
+  final String baseUrl = 'https://45ff-45-244-177-153.ngrok-free.app';
 
   @override
   void initState() {
