@@ -27,7 +27,7 @@ class _Login_ScreenState extends State<Login_Screen> {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://6589-45-244-213-140.ngrok-free.app/api/auth/login'),
+        Uri.parse('https://45ff-45-244-177-153.ngrok-free.app/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
