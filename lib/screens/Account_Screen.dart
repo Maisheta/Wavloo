@@ -1,8 +1,10 @@
+import 'dart:convert'; // For JSON parsing
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Add this
 import 'package:chat/screens/verify_screen.dart';
 import '../components/Orange_Circle.dart';
 import '../components/TextField.dart';
@@ -36,9 +38,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> register(BuildContext context) async {
     final url = Uri.parse(
-      'https://6589-45-244-213-140.ngrok-free.app/api/Auth/register',
+      'https://45ff-45-244-177-153.ngrok-free.app/api/Auth/register',
     );
-
     final request = http.MultipartRequest('POST', url);
 
     request.fields['FirstName'] = firstNameController.text.trim();
@@ -63,28 +64,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final response = await request.send();
       final respStr = await response.stream.bytesToString();
 
-      print("📡 Response Code: ${response.statusCode}");
-      print("📨 Response Body: $respStr");
+      print("📡 Register Response Code: ${response.statusCode}");
+      print("📨 Register Response Body: $respStr");
 
       if (response.statusCode == 200) {
-        // بعد النجاح، يتم التوجيه إلى صفحة VerifyScreen
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => VerifyScreen(email: emailController.text.trim()),
-          ),
-        );
+        final responseData = jsonDecode(respStr);
+        // Try multiple token keys or nested structures
+        String? token =
+            responseData['token'] ??
+            responseData['accessToken'] ??
+            responseData['jwt'] ??
+            responseData['authToken'] ??
+            responseData['data']?['token'] ??
+            responseData['data']?['accessToken'];
+
+        if (token == null) {
+          print("❌ No token found in response. Full response: $responseData");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error: No token in response')),
+            );
+          }
+          return;
+        }
+
+        // Save token under 'token' to match ChatsListScreen
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        // Verify token is saved
+        final savedToken = prefs.getString('token');
+        print("✅ Token saved: $savedToken");
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => VerifyScreen(email: emailController.text.trim()),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("❌ Failed: $respStr")));
+        print(
+          "❌ Registration failed. Status: ${response.statusCode}, Body: $respStr",
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: $respStr')),
+          );
+        }
       }
     } catch (e) {
-      print("❌ Exception: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Something went wrong!")));
+      print("❌ Register Exception: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Something went wrong!')));
+      }
     }
   }
 
@@ -189,14 +225,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Login_Screen(),
-                          ),
-                        );
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Login_Screen(),
+                        ),
+                      );
                     },
                     child: const Text(
                       "Already have an account",
