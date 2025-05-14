@@ -118,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> fetchMessages() async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/Chat/${widget.chatId}",
+      "https://45ff-45-244-177-153.ngrok-free.app/api/Chat/${widget.chatId}",
     );
 
     try {
@@ -189,8 +189,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final url = Uri.parse(
       file != null
-          ? "https://6589-45-244-213-140.ngrok-free.app/api/storage/upload"
-          : "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+          ? "https://45ff-45-244-177-153.ngrok-free.app/api/storage/upload"
+          : "https://45ff-45-244-177-153.ngrok-free.app/api/Chat/send-message",
     );
 
     try {
@@ -224,7 +224,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           final messageResponse = await http.post(
             Uri.parse(
-              "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+              "https://45ff-45-244-177-153.ngrok-free.app/api/Chat/send-message",
             ),
             headers: {
               'Authorization': 'Bearer $token',
@@ -492,7 +492,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? newChatId = await _selectChatToForward();
     if (newChatId != null) {
       final url = Uri.parse(
-        "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+        "https://45ff-45-244-177-153.ngrok-free.app/api/Chat/send-message",
       );
 
       try {
