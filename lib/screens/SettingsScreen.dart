@@ -16,7 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _lastName = '';
   String _email = '';
   String _profileImageUrl = '';
-  final String baseUrl = "https://6589-45-244-213-140.ngrok-free.app";
+  final String baseUrl = "https://45ff-45-244-177-153.ngrok-free.app";
   final String defaultImage = "https://randomuser.me/api/portraits/men/1.jpg";
   String? token;
   String? userId;
