@@ -24,7 +24,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
   Future<void> fetchUsers() async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/chat/users",
+      "https://45ff-45-244-177-153.ngrok-free.app/api/chat/users",
     );
 
     try {
@@ -100,7 +100,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
     String lastName,
   ) async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/chat/create-private-chat?userId=$targetUserId&name=$targetUserName",
+      "https://45ff-45-244-177-153.ngrok-free.app/api/chat/create-private-chat?userId=$targetUserId&name=$targetUserName",
     );
 
     try {
