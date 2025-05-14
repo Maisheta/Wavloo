@@ -24,7 +24,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://6589-45-244-213-140.ngrok-free.app/api/Auth/validate-otp',
+          'https://45ff-45-244-177-153.ngrok-free.app/api/Auth/validate-otp',
         ),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": widget.email, "otp": code}),
@@ -77,7 +77,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://6589-45-244-213-140.ngrok-free.app/api/Auth/reset-Password',
+          'https://45ff-45-244-177-153.ngrok-free.app/api/Auth/reset-Password',
         ),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
