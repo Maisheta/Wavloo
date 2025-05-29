@@ -5,7 +5,7 @@ AI-powered Chat App that bridges communication gaps between Deaf, Mute, and hear
 Wavlo empowers seamless communication for everyone — integrating voice-to-text, text-to-speech, and real-time sign language recognition to create an inclusive messaging experience for all 🌍
 
 
-## 💡 What is Wavlo?
+# 💡 What is Wavlo?
 
 Wavlo is an accessibility-first chat app that goes beyond typical messaging:
 
@@ -14,7 +14,7 @@ Wavlo is an accessibility-first chat app that goes beyond typical messaging:
 🎥 Record sign language videos — Wavlo translates them into written messages using AI
 💬 Chat just like WhatsApp — private, fast, and mobile-friendly
 
-## 🤟 Real-Time Sign Language to Text
+# 🤟 Real-Time Sign Language to Text
 This is one of Wavlo’s most innovative features. The app uses your device’s camera and real-time AI recognition to convert sign language gestures into written text — live, as the user signs each letter or word.
 
 How it Works:
@@ -37,8 +37,8 @@ Tap Send, and the message is sent in the chat.
 
 This real-time recognition system allows for fast, fluid communication without the need to record full videos — making Wavlo a powerful and inclusive tool for the Deaf and Mute community.
 
-## 📸 Screens
+# 📸 Screens
 
 
-## 🎥 Demo Video
+# 🎥 Demo Video
 
