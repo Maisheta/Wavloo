@@ -42,3 +42,17 @@ This real-time recognition system allows for fast, fluid communication without t
 
 # 🎥 Demo Video
 
+
+# 🛠️ Installation
+## Run the Flutter App
+ Clone the repository
+
+git clone https://github.com/your-username/Wavloo.git
+cd Wavloo
+
+ Get Flutter packages
+ flutter pub get
+
+ Run the app
+ flutter run
+
