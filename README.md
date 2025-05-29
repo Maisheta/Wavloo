@@ -44,13 +44,12 @@ This real-time recognition system allows for fast, fluid communication without t
 
 
 ###### 🛠️ Installation
-
-# Clone the repository
+#Clone the repository
 git clone https://github.com/your-username/Wavloo.git
 cd Wavloo
 
-# Get Flutter packages
+#Get Flutter packages
 flutter pub get
 
-# Run the app
+#Run the app
 flutter run
